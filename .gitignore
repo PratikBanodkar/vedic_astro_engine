@@ -1,0 +1,14 @@
+# .gitignore
+__pycache__/
+*.py[cod]
+*$py.class
+.env
+.venv
+venv/
+.DS_Store
+.vscode/
+# Ignore heavy ephemeris files if you don't want them in git 
+# (Though for deployment, you usually need them or a script to download them)
+# If they are small enough (<100MB total), keep them. If huge, ignore.
+local-ephe/ephe/
+service/app/secrets/
