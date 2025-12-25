@@ -1,6 +1,7 @@
 from datetime import datetime
 import os
 import firebase_admin
+from firebase_admin import credentials
 from firebase_admin import firestore
 from fastapi import Security, HTTPException, Request
 from fastapi.security import APIKeyHeader
@@ -9,11 +10,27 @@ from cachetools import TTLCache
 # Initialize Firebase
 # Logic: If GOOGLE_APPLICATION_CREDENTIALS env var is set (Local Docker), it uses that file.
 # If not set (Cloud Run), it uses default generic credentials.
+# if not firebase_admin._apps:
+#     try:
+#         firebase_admin.initialize_app()
+#     except Exception as e:
+#         print(f"Warning: Firebase Auth skipped locally. {e}")
 if not firebase_admin._apps:
     try:
-        firebase_admin.initialize_app()
+        # 1. Try to find the local JSON file first (Mac/Local Docker)
+        cred_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+        
+        if cred_path and os.path.exists(cred_path):
+            print(f"Using local credentials from: {cred_path}")
+            cred = credentials.Certificate(cred_path)
+            firebase_admin.initialize_app(cred)
+        else:
+            # 2. Fallback for Cloud Run (Uses the built-in Service Account)
+            print("No local credentials found. Using Google Application Default Credentials.")
+            firebase_admin.initialize_app()
+            
     except Exception as e:
-        print(f"Warning: Firebase Auth skipped locally. {e}")
+        print(f"Warning: Firebase Auth initialization failed. {e}")
 
 db = None
 try:
